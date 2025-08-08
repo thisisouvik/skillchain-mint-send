@@ -1,73 +1,218 @@
-# Welcome to your Lovable project
+# SkillChain dApp
 
-## Project info
+A Web3 educational platform for minting NFT badges and transferring skill tokens on Polygon Mumbai testnet.
 
-**URL**: https://lovable.dev/projects/48c07edd-121e-4a08-9645-b5b35394ba1e
+---
 
-## How can I edit this code?
+## 🛠️ Project Structure
 
-There are several ways of editing your application.
+```mermaid
+graph TD
+    A[Root] --> B[src/]
+    B --> C[components/]
+    B --> D[hooks/]
+    B --> E[lib/]
+    B --> F[pages/]
+    A --> G[contracts/]
+    A --> H[public/]
+    A --> I[config files]
 
-**Use Lovable**
+    ## 🚀 Quick Start
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/48c07edd-121e-4a08-9645-b5b35394ba1e) and start prompting.
+### Prerequisites
+- Node.js 16+ and npm
+- MetaMask browser extension
+- Polygon Mumbai testnet setup
 
-Changes made via Lovable will be committed automatically to this repo.
+### 1. Local Development
 
-**Use your preferred IDE**
+```bash
+# Clone the repository
+git clone <your-repo-url>
+cd skillchain-dapp
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+# Install dependencies
+npm install
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The app will be available at `http://localhost:8080`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### 2. MetaMask Setup
 
-**Use GitHub Codespaces**
+1. Install MetaMask extension
+2. Add Polygon Mumbai testnet:
+   - Network Name: `Polygon Mumbai Testnet`
+   - RPC URL: `https://rpc-mumbai.maticvigil.com/`
+   - Chain ID: `80001`
+   - Currency Symbol: `MATIC`
+   - Block Explorer: `https://mumbai.polygonscan.com/`
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+3. Get free testnet MATIC from [Mumbai Faucet](https://faucet.polygon.technology/)
 
-## What technologies are used for this project?
+### 3. Smart Contract Deployment
 
-This project is built with:
+#### Deploy NFT Badge Contract
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+1. Install Hardhat and dependencies:
+```bash
+npm install --save-dev hardhat @openzeppelin/contracts @nomiclabs/hardhat-ethers ethers
+```
 
-## How can I deploy this project?
+2. Create `hardhat.config.js`:
+```javascript
+require("@nomiclabs/hardhat-ethers");
 
-Simply open [Lovable](https://lovable.dev/projects/48c07edd-121e-4a08-9645-b5b35394ba1e) and click on Share -> Publish.
+module.exports = {
+  solidity: "0.8.19",
+  networks: {
+    mumbai: {
+      url: "https://rpc-mumbai.maticvigil.com/",
+      accounts: ["YOUR_PRIVATE_KEY_HERE"] // Add your private key
+    }
+  }
+};
+```
 
-## Can I connect a custom domain to my Lovable project?
+3. Deploy contracts:
+```bash
+npx hardhat run scripts/deploy.js --network mumbai
+```
 
-Yes, you can!
+#### Deploy Script (`scripts/deploy.js`)
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+```javascript
+async function main() {
+  // Deploy SkillBadge (NFT) contract
+  const SkillBadge = await ethers.getContractFactory("SkillBadge");
+  const skillBadge = await SkillBadge.deploy();
+  await skillBadge.deployed();
+  console.log("SkillBadge deployed to:", skillBadge.address);
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+  // Deploy SkillToken (ERC20) contract
+  const SkillToken = await ethers.getContractFactory("SkillToken");
+  const skillToken = await SkillToken.deploy();
+  await skillToken.deployed();
+  console.log("SkillToken deployed to:", skillToken.address);
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
+```
+
+### 4. Update Contract Addresses
+
+After deployment, update the contract addresses in:
+
+- `src/components/MintBadgeForm.tsx` - Update `NFT_CONTRACT_ADDRESS`
+- `src/components/SendTokensForm.tsx` - Update `TOKEN_CONTRACT_ADDRESS`
+
+### 5. Deploy to Vercel
+
+1. Push your code to GitHub
+2. Connect your repository to [Vercel](https://vercel.com)
+3. Deploy with these settings:
+   - Framework Preset: `Vite`
+   - Build Command: `npm run build`
+   - Output Directory: `dist`
+
+### 6. Deploy to Netlify
+
+1. Build the project:
+```bash
+npm run build
+```
+
+2. Deploy to [Netlify](https://netlify.com):
+   - Drag and drop the `dist` folder
+   - Or connect your Git repository
+   - Build command: `npm run build`
+   - Publish directory: `dist`
+
+## 🔧 Configuration
+
+### Environment Variables (Optional)
+
+Create `.env.local` for additional configuration:
+
+```env
+VITE_INFURA_PROJECT_ID=your_infura_project_id
+VITE_NETWORK_NAME=mumbai
+```
+
+### Smart Contract ABIs
+
+The contract ABIs are embedded in the components. For production, consider:
+1. Storing ABIs in separate JSON files
+2. Using a contract registry
+3. Implementing proper error handling
+
+## 🧪 Testing
+
+### Test the dApp
+
+1. Connect MetaMask to Mumbai testnet
+2. Ensure you have test MATIC
+3. Test minting NFT badges
+4. Test sending skill tokens
+5. Check transactions on [Mumbai PolygonScan](https://mumbai.polygonscan.com/)
+
+### Common Issues
+
+**"User rejected the request"**
+- User cancelled the transaction in MetaMask
+
+**"Insufficient funds"**
+- Need more test MATIC from the faucet
+
+**"Wrong network"**
+- Switch to Polygon Mumbai in MetaMask
+
+**"Contract not deployed"**
+- Update contract addresses after deployment
+
+## 📚 Contract Documentation
+
+### SkillBadge (ERC-721)
+
+- `mintBadge(address recipient, string badgeName)` - Mint a new badge
+- `getBadgesByOwner(address owner)` - Get all badges owned by an address
+- `totalSupply()` - Get total number of badges minted
+
+### SkillToken (ERC-20)
+
+- `transfer(address recipient, uint256 amount)` - Transfer tokens
+- `rewardTokens(address recipient, uint256 amount, string reason)` - Owner rewards tokens
+- `getTokenBalance(address account)` - Get readable token balance
+
+## 🔐 Security Notes
+
+- Never commit private keys to version control
+- Use environment variables for sensitive data
+- Test thoroughly on testnet before mainnet deployment
+- Consider implementing additional access controls for production
+
+## 🎯 Next Steps
+
+1. Add proper metadata for NFTs (IPFS integration)
+2. Implement role-based access control
+3. Add batch operations for efficiency
+4. Create a comprehensive testing suite
+5. Add real-time transaction tracking
+6. Implement proper error handling and user feedback
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
+
+## 📄 License
+
+MIT License - see LICENSE file for details.
