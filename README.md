@@ -16,8 +16,9 @@ graph TD
     A --> G[contracts/]
     A --> H[public/]
     A --> I[config files]
+```
 
-    ## 🚀 Quick Start
+## 🚀 Quick Start
 
 ### Prerequisites
 - Node.js 16+ and npm
